@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard · URL Shortener</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body { background: #f7f8fc; }
+    .card { border: none; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+    .badge-code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;}
+  </style>
+</head>
+<body>
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="mb-0">📊 URL Dashboard</h2>
+    <a href="/" class="btn btn-outline-primary">+ New Short URL</a>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="card p-3">
+        <div class="d-flex align-items-center">
+          <div class="me-3 fs-2">🔗</div>
+          <div>
+            <div class="text-muted">Total URLs</div>
+            <div class="fs-3 fw-semibold">{{ total_urls }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card p-3">
+        <div class="d-flex align-items-center">
+          <div class="me-3 fs-2">👀</div>
+          <div>
+            <div class="text-muted">Total Clicks</div>
+            <div class="fs-3 fw-semibold">{{ total_clicks }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-3 mb-4">
+    <canvas id="clickChart" height="90"></canvas>
+  </div>
+
+  <div class="card p-3">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Short</th>
+            <th>Original URL</th>
+            <th>Clicks</th>
+            <th>Created</th>
+            <th style="width: 180px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for u in urls %}
+          <tr>
+            <td>
+              <span class="badge text-bg-light border badge-code">{{ u.short_code }}</span><br/>
+              <a href="/{{ u.short_code }}" target="_blank">Open</a> ·
+              <a href="/stats/{{ u.short_code }}" target="_blank">Stats</a> ·
+              <a href="/qr/{{ u.short_code }}" target="_blank">QR</a>
+            </td>
+            <td style="max-width: 420px; word-break: break-all;">
+              <a href="{{ u.original_url }}" target="_blank">{{ u.original_url }}</a>
+            </td>
+            <td>{{ u.clicks }}</td>
+            <td>{{ u.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>
+              <form method="POST" action="/delete/{{ u.id }}" onsubmit="return confirm('Delete this short link?');">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5" class="text-center text-muted py-4">No URLs yet.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Simple chart: clicks per URL (top 10)
+  const labels = {{ urls|map(attribute='short_code')|list|tojson }};
+  const clicks = {{ urls|map(attribute='clicks')|list|tojson }};
+  const topLabels = labels.slice(0, 10);
+  const topClicks = clicks.slice(0, 10);
+
+  const ctx = document.getElementById('clickChart');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: topLabels,
+      datasets: [{ label: 'Clicks', data: topClicks }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }},
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+</script>
+</body>
+</html>
