@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>URL Shortener - Simple & Fast</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            max-width: 600px;
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: none;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 30px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .result-box {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .short-url {
+            font-size: 1.2rem;
+            color: #667eea;
+            font-weight: bold;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            cursor: pointer;
+        }
+
+        .alert {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header text-center">
+                <h1><i class="fas fa-link"></i> URL Shortener</h1>
+                <p class="mb-0">Make your long URLs short and shareable!</p>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- Alert Messages -->
+                <div id="alertBox"></div>
+
+                <!-- URL Input Form -->
+                <form id="urlForm" autocomplete="off">
+                    <div class="mb-3">
+                        <label for="urlInput" class="form-label">Enter your long URL:</label>
+                        <input
+                            type="url"
+                            class="form-control form-control-lg"
+                            id="urlInput"
+                            placeholder="https://example.com/very/long/url/here"
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-cut"></i> Shorten URL
+                    </button>
+                </form>
+
+                <!-- Result Box -->
+                <div id="resultBox" class="result-box">
+                    <h5>Your Shortened URL:</h5>
+                    <div class="input-group">
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="shortUrl"
+                            readonly
+                        />
+                        <button
+                            class="btn btn-outline-primary copy-btn"
+                            type="button"
+                            id="copyBtn"
+                            title="Copy shortened URL"
+                        >
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+
+                    <div class="mt-3">
+                        <a href="#" id="visitLink" target="_blank" class="btn btn-sm btn-success">
+                            <i class="fas fa-external-link-alt"></i> Visit Link
+                        </a>
+                        <a href="#" id="statsLink" class="btn btn-sm btn-info">
+                            <i class="fas fa-chart-bar"></i> View Stats
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer text-center text-muted">
+                <small>Built with Flask & Python | CI/CD with Jenkins</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Helper: show alert
+        function showAlert(type, message) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+
+        // Submit handler
+        document.getElementById('urlForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const urlInput = document.getElementById('urlInput');
+            const url = urlInput.value.trim();
+
+            // Clear previous alerts/results
+            document.getElementById('alertBox').innerHTML = '';
+            document.getElementById('resultBox').style.display = 'none';
+
+            if (!url) {
+                showAlert('danger', 'Please enter a URL.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/shorten', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showAlert('success', 'URL shortened successfully!');
+                    document.getElementById('shortUrl').value = data.short_url;
+                    document.getElementById('visitLink').href = data.short_url;
+                    document.getElementById('statsLink').href = '/stats/' + data.short_code;
+                    document.getElementById('resultBox').style.display = 'block';
+                    urlInput.value = '';
+                } else {
+                    showAlert('danger', data.error || 'Failed to shorten URL');
+                }
+            } catch (err) {
+                showAlert('danger', 'An error occurred. Please try again.');
+                console.error(err);
+            }
+        });
+
+        // Copy to clipboard (modern API with fallback)
+        document.getElementById('copyBtn').addEventListener('click', async function () {
+            const shortUrlInput = document.getElementById('shortUrl');
+            const text = shortUrlInput.value;
+            if (!text) return;
+
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    shortUrlInput.select();
+                    document.execCommand('copy');
+                }
+                showAlert('success', 'Copied to clipboard!');
+            } catch (err) {
+                showAlert('danger', 'Failed to copy. Select and copy manually.');
+            }
+        });
+    </script>
+</body>
+</html>
