@@ -1,0 +1,61 @@
+# ============================
+# Python
+# ============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+Scripts/
+Lib/
+Include/
+
+# ============================
+# Flask / Local
+# ============================
+instance/
+.webassets-cache
+
+# ============================
+# Database
+# ============================
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================
+# IDE / Editor
+# ============================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ============================
+# Testing / Coverage
+# ============================
+.pytest_cache/
+.coverage
+htmlcov/
+test-results.xml
+coverage.xml
+
+# ============================
+# Docker / Logs
+# ============================
+*.log
+
+# ============================
+# OS Files
+# ============================
+.DS_Store
+Thumbs.db
+
+# ============================
+# SonarQube
+# ============================
+.scannerwork/
