@@ -7,7 +7,7 @@ import os
 import string
 import random
 import logging
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 
 # ------------- Config & App init -------------
@@ -70,12 +70,21 @@ def home():
     """Home page with URL shortener form"""
     return render_template("index.html")
 
+# Serve favicon so it doesn't hit the catch-all short_code route
+@app.route("/favicon.ico")
+def favicon():
+    fav_dir = os.path.join(app.root_path, "static")
+    fav_path = os.path.join(fav_dir, "favicon.ico")
+    if os.path.exists(fav_path):
+        return send_from_directory(fav_dir, "favicon.ico")
+    return "", 204  # no content if not present
+
 @app.route("/shorten", methods=["POST"])
 def shorten_url():
     """Create shortened URL"""
     try:
         data = request.get_json() if request.is_json else request.form
-        original_url = data.get("url", "").strip()
+        original_url = (data.get("url") or "").strip()
 
         if not original_url:
             return jsonify({"error": "URL is required"}), 400
