@@ -14,3 +14,5 @@ flake8==6.1.0
 
 # WSGI Server for production
 gunicorn==21.2.0
+qrcode==7.4.2
+Pillow==10.4.0
