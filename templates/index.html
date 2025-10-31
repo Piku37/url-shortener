@@ -203,6 +203,8 @@
         });
 
         // Copy to clipboard (modern API with fallback)
+        document.getElementById('qrLink').href = '/qr/' + data.short_code;
+
         document.getElementById('copyBtn').addEventListener('click', async function () {
             const shortUrlInput = document.getElementById('shortUrl');
             const text = shortUrlInput.value;
